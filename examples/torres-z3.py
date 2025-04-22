@@ -1,6 +1,12 @@
 #!/usr/bin/python3
 from z3 import *
+
+import io  
 import sys
+
+filenameIn = sys.argv[1]
+myinput = "".join(open(filenameIn, "r").readlines())
+sys.stdin = io.StringIO(myinput)
 
 # altura : altura de la torre
 # disp : piezas disponibles
@@ -69,12 +75,19 @@ for i in range(altura-1):
 #constraint forall (i in 0..altura-1) (( sum (j in 0..i ) ( bool2int(torre_j=0) )) >=
 #( sum (j in 0..i ) ( bool2int(torre_j=2) )));
 for i in range(altura):
-    suma = []
-    sumv = []
+    suma = 0
+    sumv = 0
     for j in range(i+1):
-        suma.append(bool2int(torre[j] == 0))
-        sumv.append(bool2int(torre[j] == 2))
-    s.add(addsum(suma) >= addsum(sumv))
+        suma = suma + bool2int(torre[j] == 0)
+        sumv = sumv + bool2int(torre[j] == 2)
+    s.add(suma >= sumv)
+# for i in range(altura):
+#     suma = []
+#     sumv = []
+#     for j in range(i+1):
+#         suma.append(bool2int(torre[j] == 0))
+#         sumv.append(bool2int(torre[j] == 2))
+#     s.add(addsum(suma) >= addsum(sumv))
 #fin constraint
 
 #No mas piezas de las disponibles
@@ -101,11 +114,13 @@ s.add(addsum(sumc) <= altura//2)
 #constraint torre[0] = Rojo;
 s.add(torre[0] == 1)
 
-print(s.check())
+sol = s.check()
+print(sol)
 
-#print(s.model())
-for i in reversed(range(altura)):
-    print(s.model().eval(torre[i]))
+# print(s.model())
+if sol == sat:
+    for i in reversed(range(altura)):
+        print(s.model().eval(torre[i]))
 
 #print(s.to_smt2())
 exit(0)
