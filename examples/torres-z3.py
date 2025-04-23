@@ -74,13 +74,13 @@ for i in range(altura-1):
 #Piezas azules >= Piezas verdes en todo momento
 #constraint forall (i in 0..altura-1) (( sum (j in 0..i ) ( bool2int(torre_j=0) )) >=
 #( sum (j in 0..i ) ( bool2int(torre_j=2) )));
-for i in range(altura):
-    suma = 0
-    sumv = 0
-    for j in range(i+1):
-        suma = suma + bool2int(torre[j] == 0)
-        sumv = sumv + bool2int(torre[j] == 2)
-    s.add(suma >= sumv)
+# for i in range(altura):
+#     suma = 0
+#     sumv = 0
+#     for j in range(i+1):
+#         suma = suma + bool2int(torre[j] == 0)
+#         sumv = sumv + bool2int(torre[j] == 2)
+#     s.add(suma >= sumv)
 # for i in range(altura):
 #     suma = []
 #     sumv = []
@@ -88,6 +88,13 @@ for i in range(altura):
 #         suma.append(bool2int(torre[j] == 0))
 #         sumv.append(bool2int(torre[j] == 2))
 #     s.add(addsum(suma) >= addsum(sumv))
+for i in range(altura):
+    suma = []
+    sumv = []
+    for j in range(i+1):
+        suma.append(bool2int(torre[j] == 0))
+        sumv.append(bool2int(torre[j] == 2))
+    s.add(Sum(suma) >= Sum(sumv))
 #fin constraint
 
 #No mas piezas de las disponibles
