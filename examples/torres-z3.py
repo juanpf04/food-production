@@ -51,7 +51,7 @@ s = SolverFor("QF_LIA")
 # s = Solver()
 
 #declaración de variables de la solución
-torre = [];
+torre = []
 for i in range(altura):
     torre.append(Int(ntorre(i)))
 # fin declaración
