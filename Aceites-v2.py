@@ -74,11 +74,10 @@ for _ in range(aceites):
 #print("inicial =", inicial)
 #print("PV =", PV)
 
-print("K =", K)
-print("T =", T)
-print("incomp =", incomp)
-print("afines =", afines)
-
+#print("K =", K)
+#print("T =", T)
+#print("incomp =", incomp)
+#print("afines =", afines)
 
 
 def nCompras(m, a):
@@ -200,8 +199,13 @@ s.add(beneficio >= MinB)
 # - Extensión 
 
 # El producto debe hacerse con un mínimo de K aceites
+for m in range (meses):
+    minimo = Sum([bool2int(ventas[m][a] > 0) for a in range(aceites)])
+    s.add(minimo >= K[m])
 
-
+for m in range (meses):
+    for a in range (aceites):
+        s.add(Implies(ventas[m][a] > 0, ventas[m][a] >= T))
 
 # Maximizar el beneficio 
 s.maximize(beneficio)
