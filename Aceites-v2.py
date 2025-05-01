@@ -53,14 +53,14 @@ for _ in range(aceites):
         incomp.append(set())
 
 # afines: afinidades, una línea por aceite en formato "{a,b}" o "{}"
-afines = []
+afinidad = []
 for _ in range(aceites):
     raw = input().strip()
     vals = raw.strip('{} ')
     if vals:
-        afines.append(set(map(int, vals.split(','))))
+        afinidad.append(set(map(int, vals.split(','))))
     else:
-        afines.append(set())
+        afinidad.append(set())
 
 # 3) (Opcional) Mostrar todo para verificar
 
@@ -76,8 +76,8 @@ for _ in range(aceites):
 
 #print("K =", K)
 #print("T =", T)
-#print("incomp =", incomp)
-#print("afines =", afines)
+#print("incompatiblidad =", incomp)
+#print("afinidad =", afinidad)
 
 
 def nCompras(m, a):
@@ -203,9 +203,32 @@ for m in range (meses):
     minimo = Sum([bool2int(ventas[m][a] > 0) for a in range(aceites)])
     s.add(minimo >= K[m])
 
+# Si un mes usamos un cierto aceite, entonces debemos usar como mínimo T toneladas.
 for m in range (meses):
     for a in range (aceites):
         s.add(Implies(ventas[m][a] > 0, ventas[m][a] >= T))
+
+# Si usamos el aceite ANV 1 o el aceite ANV 2 en un cierto mes, entonces no podemos usar 
+# ni el VEG 2ni el ANV3ese mes. Generalizad esta restriccion a que haya aceites incompatibles.
+for m in range(meses):
+    for a1 in range(aceites):
+        # construimos la conjunción de ventas[m][a2] == 0 para cada a2 incompatible
+        incompatibles = [ventas[m][a2] == 0 for a2 in incomp[a1]]
+        # si no hay incompatibles, no añadimos restricción extra
+        if incompatibles:
+            s.add(
+                Implies(ventas[m][a1] > 0, And(*incompatibles)))
+
+# Si usamos el aceite ANV 3 entonces debemos usar VEG 1 ese mes. Generalizad esta restriccion 
+# a que haya aceites que requieren otros en su fabricacion.
+for m in range(meses):
+    for a1 in range(aceites):
+        # construimos la conjunción de ventas[m][a2] > 0 para cada a2 requerido
+        afines = [ventas[m][a2] > 0 for a2 in afinidad[a1]]
+        # si no hay requisitos, no añadimos nada
+        if afines:
+            s.add(Implies(ventas[m][a1] > 0, And(*afines)))
+
 
 # Maximizar el beneficio 
 s.maximize(beneficio)
