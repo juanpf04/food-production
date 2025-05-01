@@ -36,6 +36,32 @@ inicial = list(map(int, input().split()))
 
 PV = int(input())
 
+# K: mínimo número de aceites que se refinan por mes (longitud = meses)
+K = list(map(int, input().split()))  # e.g. "5 0 3 2 0 5"
+
+# T: mínimo toneladas por aceite refinado
+T = int(input())  # e.g. "0"
+
+# incomp: incompatibilidades, una línea por aceite en formato "{a,b,c}" o "{}"
+incomp = []
+for _ in range(aceites):
+    raw = input().strip()
+    vals = raw.strip('{} ')  # quita llaves
+    if vals:
+        incomp.append(set(map(int, vals.split(','))))
+    else:
+        incomp.append(set())
+
+# afines: afinidades, una línea por aceite en formato "{a,b}" o "{}"
+afines = []
+for _ in range(aceites):
+    raw = input().strip()
+    vals = raw.strip('{} ')
+    if vals:
+        afines.append(set(map(int, vals.split(','))))
+    else:
+        afines.append(set())
+
 # 3) (Opcional) Mostrar todo para verificar
 
 #print("VALOR =", VALOR)
@@ -47,6 +73,11 @@ PV = int(input())
 #print("MinD =", MinD, "MaxD =", MaxD, "MinB =", MinB)
 #print("inicial =", inicial)
 #print("PV =", PV)
+
+print("K =", K)
+print("T =", T)
+print("incomp =", incomp)
+print("afines =", afines)
 
 
 
@@ -163,8 +194,14 @@ for m in range(meses):
         
 s.add(beneficio == Sum(b))
 
-# El beneficio obentido supera el minimo establecido. 
+# El beneficio obentido supera el minimo establecido
 s.add(beneficio >= MinB)
+
+# - Extensión 
+
+# El producto debe hacerse con un mínimo de K aceites
+
+
 
 # Maximizar el beneficio 
 s.maximize(beneficio)
