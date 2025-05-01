@@ -38,15 +38,17 @@ PV = int(input())
 
 # 3) (Opcional) Mostrar todo para verificar
 
-print("VALOR =", VALOR)
-print("dureza =", dureza)
-print("precios =")
-for row in precios:
-    print(" ", row)
-print("MAXV =", MAXV, "MAXN =", MAXN, "MCAP =", MCAP, "CA =", CA)
-print("MinD =", MinD, "MaxD =", MaxD, "MinB =", MinB)
-print("inicial =", inicial)
-print("PV =", PV)
+#print("VALOR =", VALOR)
+#print("dureza =", dureza)
+#print("precios =")
+#for row in precios:
+#    print(" ", row)
+#print("MAXV =", MAXV, "MAXN =", MAXN, "MCAP =", MCAP, "CA =", CA)
+#print("MinD =", MinD, "MaxD =", MaxD, "MinB =", MinB)
+#print("inicial =", inicial)
+#print("PV =", PV)
+
+
 
 def nCompras(m, a):
     return "compras_"+str(m)+"_"+str(a)
@@ -116,12 +118,12 @@ for m in range(meses):
 
 # Las Ei del primer mes son las iniciales del periodo
 for a in range (aceites):
-    s.add(almacen[m][a] == inicial[a])
+    s.add(almacen[0][a] == inicial[a])
 
 # El resto de meses las Ei son Ef del mes anterior, que se obtienen con la siguiente formula: Ei + Compras = Ef + Ventas
 for m in range (1, meses):
     for a in range (aceites):
-        s.add(almacen[m - 1][a] + compras[m - 1][a] == almacen[m][a] + ventas[m][a])
+        s.add(almacen[m - 1][a] + compras[m - 1][a] == almacen[m][a] + ventas[m - 1][a])
 
 #Las Ei más las Compras de un mes no pueden superar el MCAP ya que no cabrían en el almacén
 for m in range(meses):
@@ -171,7 +173,56 @@ result = s.check()
 
 print(result)
 
-if result == sat:
-    m = s.model()
-    print(m.eval(beneficio))
+# Impresión de resultados
+if s.check() == sat:
+    model = s.model()
+    # Construir matrices de resultados
+    mat_c = [[model[compras[m][a]].as_long() for m in range(meses)] for a in range(aceites)]
+    mat_e = [[model[almacen[m][a]].as_long() for m in range(meses)] for a in range(aceites)]
+    mat_v = [[model[ventas[m][a]].as_long() for m in range(meses)] for a in range(aceites)]
 
+    # Cabecera meses
+    header = ['Mes '+str(m+1) for m in range(meses)]
+    def print_section(name, matrix):
+        print(f"\n{name}")
+        print("".ljust(12), end="")
+        for h in header: print(h.ljust(10), end="")
+        print()
+        for i,row in enumerate(matrix):
+            print(f"Aceite {i+1}".ljust(12), end="")
+            for val in row: print(str(val).ljust(10), end="")
+            print()
+    # Tablas Compras, Existencias, Ventas
+    print_section('Compras', mat_c)
+    print_section('Almecén', mat_e)
+    print_section('Ventas', mat_v)
+
+    # Durezas promedio por mes
+    durezas_avg = []
+    for m in range(meses):
+        total = sum(mat_v[a][m] for a in range(aceites))
+        if total>0:
+            durezas_avg.append(sum(dureza[a]*mat_v[a][m] for a in range(aceites))/total)
+        else:
+            durezas_avg.append(0.0)
+    print("\nDureza promedio")
+    print("".ljust(12), end="")
+    for h in header: print(h.ljust(10), end="")
+    print()
+    print("".ljust(12), end="")
+    for d in durezas_avg: print(f"{d:.2f}".ljust(10), end="")
+    print()
+
+    # Existencias finales por aceite
+    exist_final = []
+    for a in range(aceites):
+        exist_final.append(mat_e[a][meses-1] + mat_c[a][meses-1] - mat_v[a][meses-1])
+    print("\nExistencias finales")
+    print("".ljust(12), end="")
+    for i in range(aceites): print(f"Aceite {i+1}".ljust(10), end="")
+    print()
+    print("".ljust(12), end="")
+    for ef in exist_final: print(str(ef).ljust(10), end="")
+    print(f"\n\nBeneficio total: {model[beneficio].as_long()}")
+else:
+    print("No se encontró solución óptima.")
