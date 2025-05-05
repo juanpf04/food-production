@@ -13,7 +13,9 @@ sys.stdin = io.StringIO(myinput)
 VALOR = int(input())
 
 meses = 6
+nMeses = ["enero", "febrero", "marzo", "abril", "mayo", "junio"]
 aceites = 5
+nAceites = ["VEG1", "VEG2", "ANV1", "ANV2", "ANV3"]
 vegs = 2
 
 dureza = list(map(float, input().split()))
@@ -183,15 +185,13 @@ if s.check() == sat:
     mat_e = [[model[almacen[m][a]].as_long() for m in range(meses)] for a in range(aceites)]
     mat_v = [[model[ventas[m][a]].as_long() for m in range(meses)] for a in range(aceites)]
 
-    # Cabecera meses
-    header = ['Mes '+str(m+1) for m in range(meses)]
     def print_section(name, matrix):
         print(f"\n{name}")
-        print("".ljust(12), end="")
-        for h in header: print(h.ljust(10), end="")
+        print("".ljust(8), end="")
+        for m in nMeses: print(m.ljust(10), end="")
         print()
         for i,row in enumerate(matrix):
-            print(f"Aceite {i+1}".ljust(12), end="")
+            print(nAceites[i].ljust(8), end="")
             for val in row: print(str(val).ljust(10), end="")
             print()
     # Tablas Compras, Existencias, Ventas
@@ -208,10 +208,10 @@ if s.check() == sat:
         else:
             durezas_avg.append(0.0)
     print("\nDureza promedio")
-    print("".ljust(12), end="")
-    for h in header: print(h.ljust(10), end="")
+    print("".ljust(8), end="")
+    for m in nMeses: print(m.ljust(10), end="")
     print()
-    print("".ljust(12), end="")
+    print("".ljust(8), end="")
     for d in durezas_avg: print(f"{d:.2f}".ljust(10), end="")
     print()
 
@@ -220,9 +220,7 @@ if s.check() == sat:
     for a in range(aceites):
         exist_final.append(mat_e[a][meses-1] + mat_c[a][meses-1] - mat_v[a][meses-1])
     print("\nExistencias finales")
-    print("".ljust(12), end="")
-    for i in range(aceites): print(f"Aceite {i+1}".ljust(10), end="")
-    print()
-    print("".ljust(12), end="")
-    for ef in exist_final: print(str(ef).ljust(10), end="")
-    print(f"\n\nBeneficio total: {model[beneficio].as_long()}")
+    for i in range(aceites): 
+        print(nAceites[i].ljust(8), end="")
+        print(exist_final[i])
+    print(f"\nBeneficio total: {model[beneficio].as_long()}")
