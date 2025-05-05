@@ -4,13 +4,11 @@ from z3 import *
 import sys
 import io
 
-# 1) Redirige todo el contenido del archivo de entrada a stdin
 filenameIn = sys.argv[1]
-with open(filenameIn, "r") as f:
-    myinput = f.read()
+myinput = "".join(open(filenameIn, "r").readlines())
 sys.stdin = io.StringIO(myinput)
 
-# 2) Lectura de variables
+# - Variables de entrada --------------------------------------------------
 
 VALOR = int(input())
 
@@ -21,7 +19,9 @@ vegs = 2
 dureza = list(map(float, input().split()))
 
 # Leemos 6 filas de precios, cada una con 5 enteros
-precios = [list(map(int, input().split())) for _ in range(6)]
+precios = []
+for i in range(6):
+    precios.append(list(map(int, input().split())))
 
 MAXV = int(input())
 MAXN = int(input())
@@ -36,19 +36,9 @@ inicial = list(map(int, input().split()))
 
 PV = int(input())
 
-# 3) (Opcional) Mostrar todo para verificar
+# -------------------------------------------------------------------------
 
-#print("VALOR =", VALOR)
-#print("dureza =", dureza)
-#print("precios =")
-#for row in precios:
-#    print(" ", row)
-#print("MAXV =", MAXV, "MAXN =", MAXN, "MCAP =", MCAP, "CA =", CA)
-#print("MinD =", MinD, "MaxD =", MaxD, "MinB =", MinB)
-#print("inicial =", inicial)
-#print("PV =", PV)
-
-
+# - Funciones -------------------------------------------------------------
 
 def nCompras(m, a):
     return "compras_"+str(m)+"_"+str(a)
@@ -62,9 +52,12 @@ def nVentas(m, a):
 def bool2int(b):
     return If(b, 1, 0)
 
-s = Optimize()
-# s = Solver()
+# -------------------------------------------------------------------------
 
+# s = Solver()
+s = Optimize()
+
+# - Variables de salida ---------------------------------------------------
 
 compras = []
 for m in range(meses):
@@ -89,6 +82,11 @@ for m in range(meses):
 
 beneficio = Int("beneficio")
 
+# -------------------------------------------------------------------------
+
+#TODO preguntar si hay que hacer asserts
+
+# - Restricciones ---------------------------------------------------------
 
 for m in range(meses):
     for a in range (aceites):
@@ -105,8 +103,6 @@ for m in range(meses):
         s.add(0 <= ventas[m][a])
         s.add(ventas[m][a] <= MCAP)
 
-
-# posibles asserts TODO preguntar si hay que hacerlos
 
 # Nunca se refina mas del máximo permitido para cada tipo de aceite
 for m in range(meses):
@@ -166,8 +162,14 @@ s.add(beneficio == Sum(b))
 # El beneficio obentido supera el minimo establecido. 
 s.add(beneficio >= MinB)
 
+# -------------------------------------------------------------------------
+
+# - Optimización ----------------------------------------------------------
+
 # Maximizar el beneficio 
 s.maximize(beneficio)
+
+# -------------------------------------------------------------------------
 
 result = s.check()
 
@@ -224,5 +226,3 @@ if s.check() == sat:
     print("".ljust(12), end="")
     for ef in exist_final: print(str(ef).ljust(10), end="")
     print(f"\n\nBeneficio total: {model[beneficio].as_long()}")
-else:
-    print("No se encontró solución óptima.")
