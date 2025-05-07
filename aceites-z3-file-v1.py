@@ -20,9 +20,8 @@ vegs = 2
 
 dureza = list(map(float, input().split()))
 
-# Leemos 6 filas de precios, cada una con 5 enteros
 precios = []
-for i in range(6):
+for i in range(aceites+1):
     precios.append(list(map(int, input().split())))
 
 MAXV = int(input())
@@ -101,9 +100,12 @@ for m in range(meses):
         s.add(almacen[m][a] <= MCAP)
 
 for m in range(meses):
-    for a in range (aceites):
+    for a in range (vegs):
         s.add(0 <= ventas[m][a])
-        s.add(ventas[m][a] <= MCAP)
+        s.add(ventas[m][a] <= min(MCAP, MAXV))
+    for a in range (vegs, aceites):
+        s.add(0 <= ventas[m][a])
+        s.add(ventas[m][a] <= min(MCAP, MAXN))
 
 
 # Nunca se refina mas del máximo permitido para cada tipo de aceite
@@ -168,7 +170,10 @@ s.add(beneficio >= MinB)
 
 # - Optimización ----------------------------------------------------------
 
-# Maximizar el beneficio 
+# minimizar el número de aceites usados cada mes.
+# for m in range(meses):
+#     for a in range(aceites):
+#         s.add_soft(ventas[m][a] == 0)
 s.maximize(beneficio)
 
 # -------------------------------------------------------------------------

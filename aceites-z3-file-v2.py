@@ -201,12 +201,12 @@ s.add(beneficio >= MinB)
 # El producto debe hacerse con un mínimo de K aceites
 for m in range (meses):
     minimo = Sum([bool2int(ventas[m][a] > 0) for a in range(aceites)])
-    s.add(minimo >= K[m])
+    s.add_soft(minimo >= K[m])
 
 # Si un mes usamos un cierto aceite, entonces debemos usar como mínimo T toneladas.
 for m in range (meses):
     for a in range (aceites):
-        s.add(Implies(ventas[m][a] > 0, ventas[m][a] >= T))
+        s.add_soft(Implies(ventas[m][a] > 0, ventas[m][a] >= T))
 
 # Si usamos el aceite ANV 1 o el aceite ANV 2 en un cierto mes, entonces no podemos usar 
 # ni el VEG 2ni el ANV3ese mes. Generalizad esta restriccion a que haya aceites incompatibles.
@@ -216,7 +216,7 @@ for m in range(meses):
         incompatibles = [ventas[m][a2] == 0 for a2 in incomp[a1]]
         # si no hay incompatibles, no añadimos restricción extra
         if incompatibles:
-            s.add(
+            s.add_soft(
                 Implies(ventas[m][a1] > 0, And(*incompatibles)))
 
 # Si usamos el aceite ANV 3 entonces debemos usar VEG 1 ese mes. Generalizad esta restriccion 
@@ -227,11 +227,17 @@ for m in range(meses):
         afines = [ventas[m][a2] > 0 for a2 in afinidad[a1]]
         # si no hay requisitos, no añadimos nada
         if afines:
-            s.add(Implies(ventas[m][a1] > 0, And(*afines)))
+            s.add_soft(Implies(ventas[m][a1] > 0, And(*afines)))
 
+#Optimización
+
+# minimizar el núumero de aceites usados cada mes.
+for m in range(meses):
+    for a in range(aceites):
+        s.add_soft(ventas[m][a] == 0)
 
 # Maximizar el beneficio 
-s.maximize(beneficio)
+# s.maximize(beneficio)
 
 result = s.check()
 
