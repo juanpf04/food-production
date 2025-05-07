@@ -85,7 +85,27 @@ beneficio = Int("beneficio")
 
 # -------------------------------------------------------------------------
 
-#TODO preguntar si hay que hacer asserts
+# - Asserts ---------------------------------------------------------------
+
+assert VALOR > 0, "El precio de venta (VALOR) debe ser positivo"
+
+assert MAXV >= 0 and MAXN >= 0, "Las cantidades máximas de refinado (MAXV, MAXN) deben ser >= 0"
+
+assert MCAP >= 0, "La capacidad máxima de almacenamiento (MCAP) debe ser >= 0"
+
+assert CA >= 0, "El coste de almacenamiento por tonelada (CA) debe ser >= 0"
+
+assert 0 <= MinD <= MaxD, "El intervalo de dureza (MinD, MaxD) debe cumplir 0 <= MinD <= MaxD"
+
+assert 0 <= PV, "El porcentaje de variación (PV) debe ser >= 0"
+
+assert MinB >= 0, "El beneficio mínimo (MinB) debe ser >= 0"
+
+assert all(p >= 0 for row in precios for p in row), "El precio de cada aceite en cada mes debe ser >= 0"
+
+assert all(d >= 0.0 for d in dureza), "La dureza de cada tipo de aceite debe ser >= 0.0"
+
+# -------------------------------------------------------------------------
 
 # - Restricciones ---------------------------------------------------------
 
@@ -99,21 +119,25 @@ for m in range(meses):
         s.add(0 <= almacen[m][a])
         s.add(almacen[m][a] <= MCAP)
 
+cap_vegs = min(MCAP, MAXV)
+cap_anvs = min(MCAP, MAXN)
 for m in range(meses):
-    for a in range (vegs):
+    for a in range(aceites):
         s.add(0 <= ventas[m][a])
-        s.add(ventas[m][a] <= min(MCAP, MAXV))
-    for a in range (vegs, aceites):
-        s.add(0 <= ventas[m][a])
-        s.add(ventas[m][a] <= min(MCAP, MAXN))
-
+        s.add(ventas[m][a] <= If(a < vegs, cap_vegs, cap_anvs))
 
 # Nunca se refina mas del máximo permitido para cada tipo de aceite
 for m in range(meses):
-    vegetales = Sum([ventas[m][a] for a in range(vegs)])
-    s.add(vegetales <= MAXV)
-    noVegatales = Sum([ventas[m][a] for a in range(vegs, aceites)])
-    s.add(noVegatales <= MAXN)
+    ref_vegs = []
+    ref_anvs = []
+
+    for a in range(vegs):
+        ref_vegs.append(ventas[m][a])
+    for a in range(vegs, aceites):
+        ref_anvs.append(ventas[m][a])
+
+    s.add(Sum(ref_vegs) <= MAXV)
+    s.add(Sum(ref_anvs) <= MAXN)
 
 
 # Las Ei del primer mes son las iniciales del periodo
@@ -132,28 +156,26 @@ for m in range(meses):
 
 # En caso de que se usen aceites NO vegetales, la dureza final debe estar entre MinD y MaxD
 for m in range (meses):
-    # (sum(a in anvs) (ventas[m, a])
-    total_mes = Sum([ventas[m][a] for a in range(vegs, aceites)])
-    # sum(a in aceites) (dureza[a] * ventas[m, a])
-    suma_dureza = Sum([dureza[a] * ventas[m][a] for a in range (aceites)])
-    # sum(a in aceites) (ventas[m, a])
-    total_aceites = Sum([ventas[m][a] for a in range (aceites)])
+    ref_anvs = []
+    durezas = []
+    ref_aceites = []
 
-    cond = Implies(
-        total_mes > 0,
-        And(
-            suma_dureza >= MinD * total_aceites,
-            suma_dureza <= MaxD * total_aceites
-        )
-    )
-    s.add(cond)
+    for a in range(vegs, aceites):
+        ref_anvs.append(ventas[m][a])
+
+    for a in range(aceites):
+        durezas.append(ventas[m][a] * dureza[a])
+        ref_aceites.append(ventas[m][a])
+   
+    s.add(Implies(Sum(ref_anvs) > 0, And(Sum(durezas) >= MinD * Sum(ref_aceites), Sum(durezas) <= MaxD * Sum(ref_aceites))))
 
 # Las Ef del último mes no varían más de PV de las Ei del periodo
 for a in range (aceites):
-    variacion = inicial[a] * PV / 100
-    final_ultimo_mes = almacen[meses - 1][a] + compras[meses - 1][a] - ventas[meses - 1][a]
-    s.add(inicial[a] - variacion <= final_ultimo_mes)
-    s.add(final_ultimo_mes <= inicial[a] + variacion)
+    variacion = inicial[a] * PV // 100
+    Ef = almacen[meses - 1][a] + compras[meses - 1][a] - ventas[meses - 1][a]
+
+    s.add(inicial[a] - variacion <= Ef)
+    s.add(Ef <= inicial[a] + variacion)
 
 # El beneficio total se obtiene de las ventas - las compras - los costes de almacenamiento
 b = []
@@ -170,11 +192,10 @@ s.add(beneficio >= MinB)
 
 # - Optimización ----------------------------------------------------------
 
-# minimizar el número de aceites usados cada mes.
-# for m in range(meses):
-#     for a in range(aceites):
-#         s.add_soft(ventas[m][a] == 0)
-s.maximize(beneficio)
+# Minimizar el número de aceites usados cada mes.
+for m in range(meses):
+    for a in range(aceites):
+        s.add_soft(ventas[m][a] == 0)
 
 # -------------------------------------------------------------------------
 
@@ -182,12 +203,11 @@ result = s.check()
 
 print(result)
 
-# Impresión de resultados
-if s.check() == sat:
+if result == sat:
     model = s.model()
-    # Construir matrices de resultados
+    
     mat_c = [[model[compras[m][a]].as_long() for m in range(meses)] for a in range(aceites)]
-    mat_e = [[model[almacen[m][a]].as_long() for m in range(meses)] for a in range(aceites)]
+    mat_a = [[model[almacen[m][a]].as_long() for m in range(meses)] for a in range(aceites)]
     mat_v = [[model[ventas[m][a]].as_long() for m in range(meses)] for a in range(aceites)]
 
     def print_section(name, matrix):
@@ -199,33 +219,26 @@ if s.check() == sat:
             print(nAceites[i].ljust(8), end="")
             for val in row: print(str(val).ljust(10), end="")
             print()
-    # Tablas Compras, Existencias, Ventas
+
     print_section('Compras', mat_c)
-    print_section('Almecén', mat_e)
+    print_section('Almacén', mat_a)
     print_section('Ventas', mat_v)
 
-    # Durezas promedio por mes
-    durezas_avg = []
-    for m in range(meses):
-        total = sum(mat_v[a][m] for a in range(aceites))
-        if total>0:
-            durezas_avg.append(sum(dureza[a]*mat_v[a][m] for a in range(aceites))/total)
-        else:
-            durezas_avg.append(0.0)
     print("\nDureza promedio")
     print("".ljust(8), end="")
     for m in nMeses: print(m.ljust(10), end="")
-    print()
-    print("".ljust(8), end="")
-    for d in durezas_avg: print(f"{d:.2f}".ljust(10), end="")
-    print()
+    print("\n".ljust(9), end="")
+    for m in range(meses):
+        total = sum(mat_v[a][m] for a in range(aceites))
+        if total > 0:
+            print(f"{sum(dureza[a]*mat_v[a][m] for a in range(aceites))/total:.2f}".ljust(10), end="")
+        else:
+            print("0.00".ljust(10), end="")
 
-    # Existencias finales por aceite
-    exist_final = []
-    for a in range(aceites):
-        exist_final.append(mat_e[a][meses-1] + mat_c[a][meses-1] - mat_v[a][meses-1])
-    print("\nExistencias finales")
-    for i in range(aceites): 
-        print(nAceites[i].ljust(8), end="")
-        print(exist_final[i])
+
+    print("\n\nExistencias finales")
+    for a in range(aceites): 
+        print(nAceites[a].ljust(8), end="")
+        print(mat_a[a][meses-1] + mat_c[a][meses-1] - mat_v[a][meses-1])
+
     print(f"\nBeneficio total: {model[beneficio].as_long()}")
