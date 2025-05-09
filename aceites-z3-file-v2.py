@@ -308,4 +308,4 @@ if result == sat:
 
     print(f"\nBeneficio total: {model[beneficio].as_long()}")
 
-exit (0)
+exit(0)
