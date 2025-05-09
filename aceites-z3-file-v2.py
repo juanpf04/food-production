@@ -226,7 +226,7 @@ for m in range (meses):
     usados = []
     for a in range (aceites):
         usados.append(bool2int(ventas[m][a] > 0))
-    s.add_soft(Sum(usados) >= K[m])
+    s.add_soft(Sum(usados) >= K[m], 2)
 
 # Si un mes usamos un cierto aceite, entonces debemos usar como mínimo T toneladas.
 for m in range (meses):
@@ -308,3 +308,4 @@ if result == sat:
 
     print(f"\nBeneficio total: {model[beneficio].as_long()}")
 
+exit (0)
