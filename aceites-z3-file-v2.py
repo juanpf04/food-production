@@ -241,7 +241,7 @@ for m in range(meses):
         for a2 in incomp[a1]:
             incompatibles.append(ventas[m][a2-1] == 0)
 
-        s.add_soft(Implies(ventas[m][a1] > 0, And(incompatibles)))
+        s.add_soft(Implies(ventas[m][a1] > 0, And(incompatibles)), 3)
 
 # Si usamos el aceite ANV 3 entonces debemos usar VEG 1 ese mes. Generalizad esta restriccion 
 # a que haya aceites que requieren otros en su fabricacion.
@@ -251,7 +251,7 @@ for m in range(meses):
         for a2 in afinidad[a1]:
             afines.append(ventas[m][a2-1] == 0)
 
-        s.add_soft(Implies(ventas[m][a1] > 0, And(afines)))
+        s.add_soft(Implies(ventas[m][a1] > 0, And(afines)), 3)
 
 # -------------------------------------------------------------------------
 
