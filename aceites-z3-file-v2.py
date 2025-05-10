@@ -306,6 +306,6 @@ if result == sat:
         print(nAceites[a].ljust(8), end="")
         print(mat_a[a][meses-1] + mat_c[a][meses-1] - mat_v[a][meses-1])
 
-    print(f"\nBeneficio total: {model[beneficio].as_long()}")
+    print(f"\nBeneficio total: {model[beneficio].as_long()} €")
 
 exit(0)
