@@ -226,12 +226,12 @@ for m in range (meses):
     usados = []
     for a in range (aceites):
         usados.append(bool2int(ventas[m][a] > 0))
-    s.add_soft(Sum(usados) >= K[m], 2)
+    s.add_soft(Sum(usados) >= K[m], 5)
 
 # Si un mes usamos un cierto aceite, entonces debemos usar como mínimo T toneladas.
 for m in range (meses):
     for a in range (aceites):
-        s.add_soft(Implies(ventas[m][a] > 0, ventas[m][a] >= T))
+        s.add(Implies(ventas[m][a] > 0, ventas[m][a] >= T))
 
 # Si usamos el aceite ANV 1 o el aceite ANV 2 en un cierto mes, entonces no podemos usar 
 # ni el VEG 2ni el ANV3ese mes. Generalizad esta restriccion a que haya aceites incompatibles.
@@ -241,7 +241,7 @@ for m in range(meses):
         for a2 in incomp[a1]:
             incompatibles.append(ventas[m][a2-1] == 0)
 
-        s.add_soft(Implies(ventas[m][a1] > 0, And(incompatibles)), 3)
+        s.add_soft(Implies(ventas[m][a1] > 0, And(incompatibles)), 10)
 
 # Si usamos el aceite ANV 3 entonces debemos usar VEG 1 ese mes. Generalizad esta restriccion 
 # a que haya aceites que requieren otros en su fabricacion.
@@ -251,7 +251,7 @@ for m in range(meses):
         for a2 in afinidad[a1]:
             afines.append(ventas[m][a2-1] == 0)
 
-        s.add_soft(Implies(ventas[m][a1] > 0, And(afines)), 3)
+        s.add_soft(Implies(ventas[m][a1] > 0, And(afines)), 10)
 
 # -------------------------------------------------------------------------
 
