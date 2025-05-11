@@ -249,7 +249,7 @@ for m in range(meses):
     for a1 in range(aceites):
         afines = []
         for a2 in afinidad[a1]:
-            afines.append(ventas[m][a2-1] == 0)
+            afines.append(ventas[m][a2-1] > 0)
 
         s.add_soft(Implies(ventas[m][a1] > 0, And(afines)), 10)
 
